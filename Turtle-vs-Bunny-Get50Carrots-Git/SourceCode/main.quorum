@@ -1,0 +1,293 @@
+use Libraries.Game.Game
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.Color
+use Libraries.Compute.Math
+use Libraries.Game.Graphics.Label
+use Libraries.Game.Graphics.Font
+use Libraries.Game.InputMonitor
+use Libraries.Interface.Events.KeyboardEvent
+use Libraries.Sound.Audio
+use Libraries.Compute.Random
+
+use Bunny
+use Oponent
+use Bullet
+use BallDown
+use BallLeft
+use BallRight
+
+class Main is Game
+
+Bunny bunny
+Oponent mover
+Drawable target
+Drawable backGround
+Drawable bunnyWins
+Drawable turtleWins
+Bullet ballUp
+BallDown ballDown
+BallLeft ballLeft
+BallRight ballRight
+
+Label label
+Label label2
+Font font
+Font font2
+
+Color white
+Color red
+Color yellow
+Color green
+Color blue
+Color color
+
+Audio aud1
+Audio aud2
+Audio youLose
+Audio youWin
+
+Math math
+Random ran
+
+InputMonitor iMonitor
+KeyboardEvent keys
+
+number xDist = 0
+number yDist = 0
+number realdist = 0
+number xPercent = 0
+number yPercent = 0
+number currentX = 0
+number currentY = 0
+number newX = 0
+number newY = 0
+
+number scaleSetter = 1.0
+number bunnyScale = 1.0
+
+integer frameCounter = 0
+
+integer speed = 100
+integer ballSpeed = 500
+
+boolean gameOver = false
+
+    action Main
+        StartGame()
+    end
+
+    
+    action CreateGame
+        bunny:SetName("Rabit")
+        mover:SetName("WhiteDot")
+        target:SetName("BlackDot")
+
+        backGround:Load("Graphics/GrassField1.jpg")
+        Add(backGround)
+
+        bunny:Load()
+        Add(bunny)
+
+        mover:Load("Graphics/AngryBunny.png")
+        Add(mover)
+
+        target:Load("Graphics/carrot.png")
+        target:SetPosition(500, 0) 
+        Add(target)
+        
+        red = red:Red()
+        ballUp:LoadFilledCircle(10, red)
+        ballUp:SetPosition(0, 0)
+        Add(ballUp)
+
+        green = green:Green()
+        ballDown:LoadFilledCircle(10, green)
+        ballDown:SetPosition(750, 560)
+        Add(ballDown)
+
+        yellow = yellow:Yellow()
+        ballLeft:LoadFilledCircle(10, yellow)
+        ballLeft:SetPosition(750, 0)
+        Add(ballLeft)
+
+        blue = blue:Blue()
+        ballRight:LoadFilledCircle(10, blue)
+        ballRight:SetPosition(0, 560)
+        Add(ballRight)
+
+        AddCollisionListener(bunny)
+        AddCollisionListener(mover)
+        AddCollisionListener(target)
+        AddCollisionListener(ballUp)
+        AddCollisionListener(ballDown)
+        AddCollisionListener(ballLeft)
+        AddCollisionListener(ballRight)
+
+        if font:FontIsAvailable("Arial Black")
+            font:LoadFont("Arial Black")
+            label:SetFont(font)
+        else
+            output "Caould not find the font!"
+        end
+        label:SetText(" ")
+        label:SetPosition(720, 560)
+        label:SetSize(40)
+        Add(label)
+
+        if font2:FontIsAvailable("Arial Black")
+            font2:LoadFont("Arial Black")
+            label2:SetFont(font2)
+        else
+            output "Caould not find the font!"
+        end
+
+        label2:SetText(" ")
+        label2:SetPosition(720, 0)
+        label2:SetSize(40)
+        Add(label2)
+        
+    //Loading sound effects
+        aud1:Load("Audio/SilencerSingle.wav")
+        youLose:Load("Audio/Goodbye.wav")
+        youWin:Load("Audio/Yeay.wav")
+
+    //Loading and playing background music
+        aud2:Load("Audio/VivaldiSpring.ogg")
+        aud2:EnableLooping()
+        aud2:Play()
+
+        bunnyscale = bunny:bunnyScale
+    end
+
+ 
+    action Update(number seconds)
+        if gameOver = false
+            // Controing the movement of ballUp, ballDown
+            number ballUpnewY = ballUp:GetY() + ballSpeed * seconds
+            ballUp:SetPosition(ballUp:GetX(), ballUpnewY)
+
+            number ballDownNewY = ballDown:GetY() - ballSpeed *seconds
+            ballDown:SetPosition(ballDown:GetX(), ballDownNewY)
+
+            number ballLeftNewX = ballLeft:GetX() - ballSpeed * seconds
+            ballLeft:SetPosition(ballLeftNewX, ballLeft:GetY())
+
+            number ballRightNewX = ballRight:GetX() + ballSpeed * seconds
+            ballRight:SetPosition(ballRightNewX, ballRight:GetY())
+
+            // displaying the counter in the labels
+            integer counter = mover:opCounter
+            text counterText = cast(text, counter)
+                label:SetText(counterText)  
+
+            integer counter2 = bunny:bCounter
+            text counter2Text = cast(text, counter2)
+                label2:SetText(counter2Text)
+
+            if counter >= 50 or counter2 >= 50
+                aud2:Stop()
+            end
+
+            // Controling the movement of mover
+            if counter < 50 and counter2 <50
+                currentX = mover:GetX()
+                currentY = mover:GetY()
+
+                xDist = currentX-target:GetX()
+                yDist = currentY-target:GetY()
+                realDist = math:SquareRoot(xDist*xDist + yDist*yDist)
+                xPercent = xDist / realDist
+                yPercent = yDist /realDist
+
+                newX = currentX - speed*xPercent*seconds
+                newY = currentY - speed*yPercent*seconds
+
+                mover:SetPosition(newX, newY)
+            elseif counter >= 50 and counter2 < 50
+
+                mover:SetColor(color:White())
+                scaleSetter = scaleSetter +0.1
+                mover:SetScale(scaleSetter)
+                    if scaleSetter >= 3.0
+                        youLose:Play()
+                        say "You lost the game"
+                        gameOver = true
+                    end
+             elseif counter2 >= 50 and counter < 50
+                mover:SetPosition(mover:GetX(), mover:GetY())
+                scaleSetter = scaleSetter +0.1
+                bunny:SetScale(scaleSetter)
+                    if scaleSetter >= 3.0
+                    youWin:Play()
+                    say "You won the game!"
+                    gameOver = true
+                    end
+            end
+
+    /* Setting the mechanism for the player to know the oponenet is gradually getting to 
+    his goal by color cahnge and size increase. since the oponent gets bigger it gains 
+    speed to reach the carrot. */
+            if counter = 10
+                mover:SetSize(105, 109)
+                mover:SetColor(color:Yellow())
+            elseif counter = 20
+                mover:SetSize(125, 129)
+                mover:SetColor(color:Orange())
+            elseif counter = 30
+                mover:SetSize(145, 149)
+                mover:SetColor(color:Pink())
+            elseif counter = 40
+                mover:SetSize(165, 169)
+                mover:SetColor(color:Red())
+            end
+
+            //Calculating the position of bunny
+            number currentXbunny = bunny:GetX()
+            number currentYbunny = bunny:GetY()
+
+            //Calculating the top of bunny, bottom of bunny is GetY()
+            number bunnyTop = currentYbunny + 82
+
+            //Calculating the centerX of bunny
+            number bunnyCenterX = currentXbunny + 45
+
+            //Calculating the centerY of bunny
+            number bunnyCenterY = currentYbunny + 41
+
+            //calculating the right edge of bunny
+            number bunnyRight = currentXbunny + 89
+
+            // Making the bullet come to the top center of bunny
+            if counter2 > 4 and counter2 <= 9 and counter < 50
+                if iMonitor:IsKeyPressed(keys:SPACE)
+                    aud1:Play()
+                    ballUp:SetPosition(bunnyCenterX, bunnyTop)
+                end
+            elseif counter2 > 9 and counter2 <= 14 and counter < 50
+                if iMonitor:IsKeyPressed(keys:SPACE)
+                    aud1:Play()
+                    ballUp:SetPosition(bunnyCenterX, bunnyTop)
+                    ballDown:SetPosition(bunnyCenterX, currentYbunny)
+                end
+            elseif counter2 > 14 and counter2 <= 19 and counter < 50
+                if iMonitor:IsKeyPressed(keys:SPACE)
+                    aud1:Play()
+                    ballUp:SetPosition(bunnyCenterX, bunnyTop)
+                    ballDown:SetPosition(bunnyCenterX, currentYbunny)
+                    ballLeft:SetPosition(currentXbunny, bunnyCenterY)
+                end
+            elseif counter2 > 19 and counter < 50
+                if iMonitor:IsKeyPressed(keys:SPACE)
+                    aud1:Play()
+                    ballUp:SetPosition(bunnyCenterX, bunnyTop)
+                    ballDown:SetPosition(bunnyCenterX, currentYbunny)
+                    ballLeft:SetPosition(currentXbunny, bunnyCenterY)
+                    ballRight:SetPosition(bunnyRight, bunnyCenterY)
+                end
+            end
+        elseif gameOver = true
+            Exit()
+        end
+    end
+    
+end

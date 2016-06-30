@@ -1,0 +1,22 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Sound.Audio
+
+class BallRight is Drawable
+    Audio aud
+
+    on create
+        aud:Load("Audio/BumpingBunny.wav")
+    end
+    
+     action BeginCollision(Item item)
+        if item:GetName() = "WhiteDot"
+            aud:Play()
+
+            number itemCurrentY = item:GetY()
+            number itemCurrentX = item:GetX()
+            item:SetPosition(itemCurrentX+100, itemCurrentY +50)
+        elseif item:GetName() = "BlackDot"
+        end
+
+    end
+end

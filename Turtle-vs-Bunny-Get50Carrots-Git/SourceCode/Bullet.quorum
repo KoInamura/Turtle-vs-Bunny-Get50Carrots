@@ -1,0 +1,23 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Sound.Audio
+
+class Bullet is Drawable
+    Audio aud
+
+    on create
+        aud:Load("Audio/BumpingBunny.wav")
+    end
+
+    action BeginCollision(Item item)
+        if item:GetName() = "WhiteDot"
+            aud:Play()
+
+            number itemCurrentY = item:GetY()
+            number itemCurrentX = item:GetX()
+            item:SetPosition(itemCurrentX+50, itemCurrentY +100)
+        elseif item:GetName() = "BlackDot"
+        end
+
+    end
+    
+end

@@ -1,0 +1,86 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.InputMonitor
+use Libraries.Interface.Events.KeyboardEvent
+use Libraries.Interface.Item
+use Libraries.Sound.Audio
+use Libraries.Game.Game
+use Libraries.Compute.Random
+
+class Bunny is Drawable
+    InputMonitor inputMonitor      
+    KeyboardEvent keys              
+    Audio gubble
+    Audio aud
+    Random ran
+
+    number speed = 100   
+    public integer bCounter = 0
+    public number bunnyScale = 1.0
+
+    on create
+    gubble:Load("heavySound.wav")
+    
+    end
+                                    
+    // This action creates the game. It should load the bunny image to the
+    // bunny drawable and add the bunny to the game.
+    action Load
+        
+        me:Load("Graphics/Turtle.png")
+        me:SetPosition(0, 0)
+        
+        
+    end
+
+    // This action updates the bunny's position on the screen if a key is
+    // pressed down. This action should check whether any of the arrow keys are
+    // pressed down, and if so, move the bunny in the appropriate direction.
+    action Update(number time)
+       
+            if inputMonitor:IsKeyPressed(keys:UP)
+                number y = me:GetY()
+                me:SetY(y + speed * time)
+                //Preventing clipping at the top side opf the frame
+                if y > 510
+                me:SetY(y + 0 * time)
+                end
+            elseif inputMonitor:IsKeyPressed(keys:DOWN)
+                number y = me:GetY()
+                me:SetY(y - speed * time)
+                //Prevent clipping at the bottom of the frame
+                if y < 0
+                me:SetY(y - 0 * time)
+                end
+            elseif inputMonitor:IsKeyPressed(keys:LEFT)
+                number x = me:GetX()
+                me:SetX(x - speed * time)
+                //Preventing the clipping at the left side of the frame
+                if x < 0
+                me:SetX(x - 0 * time)
+                end
+            elseif inputMonitor:IsKeyPressed(keys:RIGHT)
+                number x = me:GetX()
+                me:SetX(x + speed * time)
+                //Prevneting the clipping at the right sideo of the frame
+                if x > 700
+                me:SetX(x + 0 * time)
+                end
+            end
+        
+    end
+
+    action BeginCollision(Item item)
+        if item:GetName() = "BlackDot"
+            gubble:Play()
+            item:Hide()
+            bCounter = bCounter + 1
+            integer newX = ran:RandomInteger(700)
+            integer newY = ran:RandomInteger(510)
+            item:SetPosition(newX, newY)
+            item:Show()
+        elseif item:GetName() = "WhiteDot"
+            //Do nothing 
+        end
+    end
+
+end
